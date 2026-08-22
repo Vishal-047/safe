@@ -4,7 +4,7 @@ from typing import List
 
 from safelane.contracts import (
     AnalysisRequest, RepoContext, EvidenceResult, VerdictReport, PRPayload,
-    MODULE_LABELS, MODULE_WEIGHTS
+    MODULE_LABELS, MODULE_WEIGHTS, SecurityFinding
 )
 from safelane.fabric.inputs import clean_untrusted_text, normalize_pr_payload
 from safelane.fabric.security_preflight import run_preflight, apply_security_policy
