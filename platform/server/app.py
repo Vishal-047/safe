@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from platform.server.services.db import init_db
-from platform.server.routers import auth, github_setup, registrations
+from server.services.db import init_db
+from server.routers import auth, github_setup, registrations
 
 logger = logging.getLogger('safelane.platform')
 logging.basicConfig(level=logging.INFO)

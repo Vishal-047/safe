@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer
-from platform.server.services.auth_service import create_jwt, verify_jwt
-from platform.server.services.github_service import validate_token
+from server.services.auth_service import create_jwt, verify_jwt
+from server.services.github_service import validate_token
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")

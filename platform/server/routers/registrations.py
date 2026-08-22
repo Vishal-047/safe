@@ -2,9 +2,9 @@ import os
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Annotated
-from platform.server.routers.auth import get_current_user
-from platform.server.services.db import create_registration, list_registrations, async_session, Registration
-from platform.server.services.auth_service import encrypt_pat
+from server.routers.auth import get_current_user
+from server.services.db import create_registration, list_registrations, async_session, Registration
+from server.services.auth_service import encrypt_pat
 
 router = APIRouter()
 

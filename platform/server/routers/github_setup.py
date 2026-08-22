@@ -3,8 +3,8 @@ import httpx
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Annotated
-from platform.server.routers.auth import get_current_user
-from platform.server.services.github_service import commit_workflow_file
+from server.routers.auth import get_current_user
+from server.services.github_service import commit_workflow_file
 
 router = APIRouter()
 
