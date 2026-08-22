@@ -1,4 +1,4 @@
-# SafeLane v2
+# SafeLane
 
 *An AI-powered pre-deployment risk gate for GitHub pull requests.*
 
