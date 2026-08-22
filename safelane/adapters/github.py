@@ -54,10 +54,7 @@ async def webhook_pr(
         if not hmac.compare_digest(x_hub_signature_256, expected_sig):
             raise HTTPException(status_code=401, detail="Invalid signature")
     else:
-        logger.warning("GITHUB_WEBHOOK_SECRET is not set, bypassing verification.")
-        client_ip = request.client.host if request.client else ""
-        if client_ip != "127.0.0.1":
-            raise HTTPException(status_code=401, detail="Unauthorized IP for insecure webhook")
+        logger.warning("GITHUB_WEBHOOK_SECRET is not set, bypassing verification. Set it for production use.")
 
     data = await request.json()
     

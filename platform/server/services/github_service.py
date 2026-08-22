@@ -4,8 +4,7 @@ import logging
 
 logger = logging.getLogger('safelane.platform')
 
-WORKFLOW_TEMPLATE = """
-name: SafeLane PR Gate
+WORKFLOW_TEMPLATE = """name: SafeLane PR Gate
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -18,12 +17,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Trigger SafeLane Orchestrator
+        env:
+          EVENT_PAYLOAD: ${{{{ toJson(github.event) }}}}
         run: |
-          curl -X POST {orchestrator_url}/webhook/github \\
-          -H "Content-Type: application/json" \\
-          -d "${{ toJson(github.event) }}"
+          printf '%s' "$EVENT_PAYLOAD" | curl -X POST "{orchestrator_url}/webhook/pr" -H "Content-Type: application/json" -H "X-GitHub-Event: pull_request" --data-binary @- --fail-with-body
 """
 
 async def validate_token(token: str) -> dict:
