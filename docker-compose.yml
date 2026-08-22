@@ -1,0 +1,23 @@
+services:
+  safelane:
+    build:
+      context: .
+      dockerfile: Dockerfile.safelane
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    # Volume mount so you can see live code changes without rebuilding
+    volumes:
+      - .:/app
+
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile.platform
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - .:/app

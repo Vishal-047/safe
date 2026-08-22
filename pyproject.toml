@@ -1,0 +1,15 @@
+[project]
+name = "safelane"
+version = "1.0.0"
+description = "AI-powered pre-deployment risk gate for GitHub pull requests"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "unit: pure mock/unit test, no real I/O",
+    "integration: real agent logic, external Azure stubbed",
+    "azure_required: needs live Azure creds, auto-skipped if absent",
+    "foundry_required: needs live Foundry creds, auto-skipped if absent",
+]
+testpaths = ["tests"]

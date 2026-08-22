@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeLane Setup Platform</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f6f8fa; color: #24292f; margin: 0; padding: 2rem; display: flex; justify-content: center; }
+        .container { background: white; padding: 2rem; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); width: 100%; max-width: 600px; }
+        h1 { margin-top: 0; color: #0969da; }
+        .step { display: none; }
+        .step.active { display: block; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 8px; margin: 8px 0 16px; border: 1px solid #d0d7de; border-radius: 6px; box-sizing: border-box; }
+        button { background: #2da44e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { background: #2c974b; }
+        select { width: 100%; padding: 8px; margin: 8px 0 16px; border: 1px solid #d0d7de; border-radius: 6px; }
+        #status { margin-top: 16px; color: #cf222e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SafeLane Setup</h1>
+        
+        <div id="step1" class="step active">
+            <h2>Step 1: Authenticate</h2>
+            <p>Enter a GitHub Personal Access Token (PAT) with `repo` and `workflow` permissions.</p>
+            <input type="password" id="pat" placeholder="ghp_...">
+            <button onclick="authenticate()">Next</button>
+            <div id="status1" id="status"></div>
+        </div>
+        
+        <div id="step2" class="step">
+            <h2>Step 2: Select Repository</h2>
+            <p>Select the repository where you want to install SafeLane.</p>
+            <select id="repoSelect"></select>
+            <button onclick="installWorkflow()">Install SafeLane</button>
+            <div id="status2" id="status"></div>
+        </div>
+        
+        <div id="step3" class="step">
+            <h2>Step 3: Success!</h2>
+            <p>SafeLane has been successfully installed in your repository.</p>
+            <p>The workflow file `.github/workflows/safelane-gate.yml` was committed to the main branch.</p>
+            <p>It will automatically run on your next Pull Request.</p>
+        </div>
+    </div>
+
+    <script>
+        let token = "";
+        
+        async function authenticate() {
+            const pat = document.getElementById('pat').value;
+            if (!pat) return;
+            
+            try {
+                const res = await fetch('/api/auth/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pat })
+                });
+                
+                if (!res.ok) throw new Error("Invalid PAT");
+                
+                const data = await res.json();
+                token = data.access_token;
+                
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+                
+                loadRepos();
+            } catch (e) {
+                document.getElementById('status1').innerText = e.message;
+            }
+        }
+        
+        async function loadRepos() {
+            try {
+                const res = await fetch('/api/github/repos', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const repos = await res.json();
+                
+                const select = document.getElementById('repoSelect');
+                repos.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = JSON.stringify({ owner: r.owner, repo: r.name });
+                    opt.innerText = r.full_name;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                document.getElementById('status2').innerText = "Failed to load repos";
+            }
+        }
+        
+        async function installWorkflow() {
+            const selected = JSON.parse(document.getElementById('repoSelect').value);
+            
+            try {
+                const res = await fetch('/api/github/install', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(selected)
+                });
+                
+                if (!res.ok) throw new Error("Failed to install workflow");
+                
+                // Also create registration
+                await fetch('/api/registrations/', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(selected)
+                });
+                
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step3').classList.add('active');
+            } catch (e) {
+                document.getElementById('status2').innerText = e.message;
+            }
+        }
+    </script>
+</body>
+</html>

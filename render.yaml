@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: safelane-orchestrator
+    env: docker
+    dockerfilePath: Dockerfile.safelane
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false # You will need to paste your PostgreSQL URL here, and make sure it starts with postgresql+asyncpg://
+      - key: ENCRYPTION_KEY
+        sync: false # Set securely in Render dashboard
+      - key: JWT_SECRET
+        sync: false # Set securely in Render dashboard
+      - key: GITHUB_WEBHOOK_SECRET
+        sync: false # Set securely in Render dashboard
+
+  - type: web
+    name: safelane-platform
+    env: docker
+    dockerfilePath: Dockerfile.platform
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Paste the exact same PostgreSQL URL here so both services share the database
+      - key: ENCRYPTION_KEY
+        sync: false # Must be EXACTLY the same as orchestrator
+      - key: JWT_SECRET
+        sync: false # Must be EXACTLY the same as orchestrator
+
+databases:
+  - name: safelane-db
+    databaseName: safelane
+    user: safelane
+    plan: free

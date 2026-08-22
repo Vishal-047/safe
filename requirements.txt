@@ -1,0 +1,35 @@
+# ── Core (Required) ──
+fastapi
+uvicorn
+pydantic>=2.0
+python-dotenv
+aiohttp
+httpx
+
+# ── Azure OpenAI & AI Services (Optional) ──
+openai
+azure-identity>=1.25.2
+azure-ai-projects
+azure-ai-contentsafety
+
+# ── Azure AI Search — Incident Memory (Optional) ──
+azure-search-documents==11.4.0
+azure-monitor-query==1.2.0
+
+# ── Observability — Foundry / App Insights (Optional) ──
+azure-monitor-opentelemetry>=1.8.6
+azure-monitor-opentelemetry-exporter>=1.0.0b36
+opentelemetry-sdk>=1.39.0
+opentelemetry-api>=1.39.0
+opentelemetry-instrumentation-openai-v2
+
+# ── Platform DB (Required) ──
+sqlalchemy[asyncio]>=2.0.0
+aiosqlite>=0.19.0
+asyncpg>=0.29.0
+PyJWT>=2.8.0
+cryptography>=41.0.0
+
+# ── Testing (Required for development) ──
+pytest
+pytest-asyncio
