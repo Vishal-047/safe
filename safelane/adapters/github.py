@@ -73,21 +73,43 @@ async def webhook_pr(
     if not repo_name:
         raise HTTPException(status_code=400, detail="Missing repository full_name")
 
-    # In a real system we'd fetch diff and changed files here from GitHub
+    repo_context = get_repo_context(repo_name)
+    if not repo_context:
+        raise HTTPException(status_code=404, detail="Repo context not found")
+
+    # Fetch real PR diff and changed files from GitHub API
+    diff_text = ""
+    changed_files = []
+    try:
+        import httpx
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {repo_context.gh_token}", "User-Agent": "SafeLane"}
+            diff_resp = await client.get(
+                f"https://api.github.com/repos/{repo_name}/pulls/{pr_data.get('number', 0)}",
+                headers={**headers, "Accept": "application/vnd.github.v3.diff"}
+            )
+            if diff_resp.status_code == 200:
+                diff_text = diff_resp.text
+                
+            files_resp = await client.get(
+                f"https://api.github.com/repos/{repo_name}/pulls/{pr_data.get('number', 0)}/files",
+                headers={**headers, "Accept": "application/vnd.github.v3+json"}
+            )
+            if files_resp.status_code == 200:
+                changed_files = [f["filename"] for f in files_resp.json()]
+    except Exception as e:
+        logger.error(f"Failed to fetch PR details from GitHub: {e}")
+
     payload = PRPayload(
         pr_number=pr_data.get("number", 0),
         repo=repo_name,
-        changed_files=[], # Mock
-        diff="mock diff", # Mock
+        changed_files=changed_files,
+        diff=diff_text,
         timestamp=pr_data.get("updated_at", "1970-01-01T00:00:00Z"),
         head_sha=pr_data.get("head", {}).get("sha", ""),
         skip_autofix=False
     )
     
-    repo_context = get_repo_context(repo_name)
-    if not repo_context:
-        raise HTTPException(status_code=404, detail="Repo context not found")
-        
     background_tasks.add_task(_run_analysis, payload, repo_context)
     return {"status": "accepted"}
 
