@@ -14,7 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt -r platform/requirements.txt
 
 COPY . .
 ENV PYTHONPATH=/app
+WORKDIR /app/platform
 
 EXPOSE 8080
 
-CMD ["uvicorn", "platform.server.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "8080"]
