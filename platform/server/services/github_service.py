@@ -20,7 +20,7 @@ jobs:
 
       - name: Trigger SafeLane Orchestrator
         env:
-          EVENT_PAYLOAD: ${{{{ toJson(github.event) }}}}
+          EVENT_PAYLOAD: ${{ toJson(github.event) }}
         run: |
           printf '%s' "$EVENT_PAYLOAD" | curl -X POST "{orchestrator_url}/webhook/pr" -H "Content-Type: application/json" -H "X-GitHub-Event: pull_request" --data-binary @- --fail-with-body
 """
