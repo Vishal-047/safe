@@ -36,4 +36,4 @@ async def health_check():
     return {"status": "ok"}
 
 # Mount frontend
-app.mount("/", StaticFiles(directory="platform/frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
