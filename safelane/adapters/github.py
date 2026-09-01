@@ -45,7 +45,9 @@ async def get_repo_context(repo: str) -> Optional[RepoContext]:
                     gh_token=gh_token
                 )
     except Exception as e:
-        logger.warning(f"DB lookup failed for {repo}: {e}")
+        import traceback
+        logger.warning(f"DB lookup failed for {repo}: {type(e).__name__} - {str(e)}")
+        logger.warning(traceback.format_exc())
 
     # 2. Fallback: use GITHUB_TOKEN env var if DB lookup failed or repo not registered
     token = os.environ.get("GITHUB_TOKEN")
