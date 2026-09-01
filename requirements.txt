@@ -1,6 +1,7 @@
 # ── Core (Required) ──
 fastapi
 uvicorn
+gunicorn
 pydantic>=2.0
 python-dotenv
 aiohttp
