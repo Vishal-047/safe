@@ -11,3 +11,6 @@ if PLATFORM_DIR not in sys.path:
     sys.path.insert(0, PLATFORM_DIR)
 
 from server.app import app
+
+# gunicorn looks for 'application' by default
+application = app
