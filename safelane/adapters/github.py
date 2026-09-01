@@ -24,7 +24,8 @@ async def get_repo_context(repo: str) -> Optional[RepoContext]:
     try:
         import sys
         # Add platform directory to path so orchestrator can access shared DB service
-        platform_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "platform")
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        platform_path = os.path.join(project_root, "platform")
         if platform_path not in sys.path:
             sys.path.insert(0, platform_path)
 
