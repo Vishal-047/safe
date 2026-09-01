@@ -28,11 +28,14 @@ async def github_login(request: Request):
     client_id = os.environ.get("GITHUB_CLIENT_ID")
     if not client_id:
         raise HTTPException(status_code=400, detail="GITHUB_CLIENT_ID is not configured on the server")
+    
     redirect_uri = os.environ.get("GITHUB_REDIRECT_URI")
     if not redirect_uri:
-        base_url = str(request.base_url).rstrip('/')
-        base_url = base_url.replace("0.0.0.0", "localhost")
-        redirect_uri = f"{base_url}/api/auth/github/callback"
+        # Build from request, honoring Render's proxy headers for https
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+        host = request.headers.get("x-forwarded-host", request.url.hostname)
+        redirect_uri = f"{scheme}://{host}/api/auth/github/callback"
+    
     scope = "repo workflow read:user user:email"
     url = f"https://github.com/login/oauth/authorize?client_id={client_id}&scope={scope}&redirect_uri={redirect_uri}"
     return RedirectResponse(url)
