@@ -3,99 +3,596 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeLane Setup Platform</title>
+    <title>SafeLane Platform — Direct GitHub Authorization & Setup</title>
+    <meta name="description" content="Authorize SafeLane directly from GitHub to protect your pull requests with AI change assurance.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f6f8fa; color: #24292f; margin: 0; padding: 2rem; display: flex; justify-content: center; }
-        .container { background: white; padding: 2rem; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); width: 100%; max-width: 600px; }
-        h1 { margin-top: 0; color: #0969da; }
-        .step { display: none; }
-        .step.active { display: block; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 8px; margin: 8px 0 16px; border: 1px solid #d0d7de; border-radius: 6px; box-sizing: border-box; }
-        button { background: #2da44e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        button:hover { background: #2c974b; }
-        select { width: 100%; padding: 8px; margin: 8px 0 16px; border: 1px solid #d0d7de; border-radius: 6px; }
-        #status { margin-top: 16px; color: #cf222e; }
+        :root {
+            --bg-color: #0b0f17;
+            --card-bg: rgba(22, 30, 46, 0.75);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --github-btn-bg: #24292e;
+            --github-btn-hover: #2f363d;
+            --input-bg: #111827;
+            --input-border: #374151;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px var(--accent-glow);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 580px;
+            padding: 2.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1.25rem;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .brand-title h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+
+        .brand-title p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #ffffff;
+        }
+
+        p.desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Permissions Card */
+        .permissions-card {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .permissions-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.875rem;
+            color: #e5e7eb;
+            margin-bottom: 0.6rem;
+        }
+
+        .permission-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .permission-icon {
+            color: var(--success);
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Buttons */
+        .btn-github {
+            width: 100%;
+            background-color: var(--github-btn-bg);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+        }
+
+        .btn-github:hover {
+            background-color: var(--github-btn-hover);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--input-border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Fallback section */
+        .fallback-container {
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .toggle-link {
+            background: none;
+            border: none;
+            color: #60a5fa;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .fallback-box {
+            display: none;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 11px 14px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            margin: 8px 0 16px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Status & alerts */
+        .status-alert {
+            margin-top: 1.25rem;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .status-alert.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .status-alert.info {
+            display: block;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        /* Success screen styling */
+        .success-box {
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid var(--success);
+            color: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.25rem;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .badge-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Accordion */
+        details {
+            margin-bottom: 1.25rem;
+            background: rgba(17, 24, 39, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+        }
+        summary {
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        summary:hover {
+            color: var(--text-main);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>SafeLane Setup</h1>
-        
+        <div class="brand-header">
+            <div class="brand-logo">SL</div>
+            <div class="brand-title">
+                <h1>SafeLane Platform</h1>
+                <p>Autonomous Change Assurance for GitHub Repositories</p>
+            </div>
+        </div>
+
+        <!-- STEP 1: GITHUB AUTHORIZATION -->
         <div id="step1" class="step active">
-            <h2>Step 1: Authenticate</h2>
-            <p>Enter a GitHub Personal Access Token (PAT) with `repo` and `workflow` permissions.</p>
-            <input type="password" id="pat" placeholder="ghp_...">
-            <button onclick="authenticate()">Next</button>
-            <div id="status1" id="status"></div>
+            <h2>Step 1: Direct GitHub Authorization</h2>
+            <p class="desc">Authorize SafeLane directly from your GitHub account. No manual webhook secret configuration or token creation required.</p>
+
+            <div class="permissions-card">
+                <div class="permissions-title">Requested Essential Permissions</div>
+                <div class="permission-item">
+                    <span class="permission-icon">✓</span>
+                    <span><strong>Repository Access (<code>repo</code>):</strong> Read PR diffs & post automated security verdict comments.</span>
+                </div>
+                <div class="permission-item">
+                    <span class="permission-icon">✓</span>
+                    <span><strong>Workflow Automation (<code>workflow</code>):</strong> Commit <code>.github/workflows/safelane-gate.yml</code> automatically.</span>
+                </div>
+                <div class="permission-item">
+                    <span class="permission-icon">✓</span>
+                    <span><strong>User Identity (<code>read:user</code>):</strong> Authenticate your developer session securely.</span>
+                </div>
+            </div>
+
+            <button id="btnOAuth" class="btn-github" onclick="authorizeWithGitHub()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                Authorize SafeLane with GitHub
+            </button>
+
+            <div class="fallback-container">
+                <button class="toggle-link" id="btnToggleManual" onclick="toggleManualAuth()">Or connect using a Personal Access Token (PAT)</button>
+                <div class="fallback-box" id="manualAuthBox">
+                    <label for="pat">GitHub Personal Access Token (PAT):</label>
+                    <input type="password" id="pat" placeholder="ghp_..." autocomplete="off">
+                    <button class="btn-primary" onclick="authenticatePAT()">Authenticate with PAT</button>
+                </div>
+            </div>
+
+            <div id="status1" class="status-alert"></div>
         </div>
-        
+
+        <!-- STEP 2: REPOSITORY SELECTION -->
         <div id="step2" class="step">
-            <h2>Step 2: Select Repository</h2>
-            <p>Select the repository where you want to install SafeLane.</p>
-            <select id="repoSelect"></select>
-            <button onclick="installWorkflow()">Install SafeLane</button>
-            <div id="status2" id="status"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>Step 2: Select Repository</h2>
+                <div id="userBadge" class="badge-chip">👤 Authenticated</div>
+            </div>
+            <p class="desc">Select the repository where you want to install the SafeLane PR Gate workflow.</p>
+            
+            <label for="repoSelect">Target Repository:</label>
+            <select id="repoSelect">
+                <option value="">Loading repositories...</option>
+            </select>
+
+            <details>
+                <summary>Advanced Azure Settings (Optional)</summary>
+                <div style="margin-top: 10px;">
+                    <label for="azureSearchEndpoint">Azure AI Search Endpoint:</label>
+                    <input type="text" id="azureSearchEndpoint" placeholder="https://your-search.search.windows.net">
+                    
+                    <label for="azureSearchKey">Azure AI Search Key:</label>
+                    <input type="password" id="azureSearchKey" placeholder="Search service key">
+                </div>
+            </details>
+
+            <button class="btn-primary" onclick="installWorkflow()">Install SafeLane Gate</button>
+            <div id="status2" class="status-alert"></div>
         </div>
-        
+
+        <!-- STEP 3: SUCCESS CONFIRMATION -->
         <div id="step3" class="step">
-            <h2>Step 3: Success!</h2>
-            <p>SafeLane has been successfully installed in your repository.</p>
-            <p>The workflow file `.github/workflows/safelane-gate.yml` was committed to the main branch.</p>
-            <p>It will automatically run on your next Pull Request.</p>
+            <div class="success-box">
+                <div class="success-icon">✓</div>
+                <h2>SafeLane Installed Successfully!</h2>
+                <p class="desc">The SafeLane PR Gate workflow (<code>.github/workflows/safelane-gate.yml</code>) has been committed to your repository main branch.</p>
+                <p class="desc" style="color: #60a5fa;">Every upcoming Pull Request will now automatically undergo multi-agent change assurance analysis and receive dynamic verdict checks.</p>
+                
+                <button class="btn-secondary" onclick="location.reload()" style="margin-top: 1rem;">Install in Another Repository</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let token = "";
-        
-        async function authenticate() {
-            const pat = document.getElementById('pat').value;
-            if (!pat) return;
-            
+        let token = localStorage.getItem('safelane_token') || "";
+
+        window.onload = async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectToken = urlParams.get('token');
+            const errorParam = urlParams.get('error');
+
+            if (errorParam) {
+                showStatus('status1', errorParam, 'error');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            if (redirectToken) {
+                token = redirectToken;
+                localStorage.setItem('safelane_token', token);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showStep(2);
+                await loadReposAndUser();
+                return;
+            }
+
+            if (token) {
+                // Validate existing stored token
+                try {
+                    const res = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                        const user = await res.json();
+                        document.getElementById('userBadge').innerText = `👤 ${user.github_username}`;
+                        showStep(2);
+                        await loadReposAndUser();
+                        return;
+                    }
+                } catch (e) {
+                    token = "";
+                    localStorage.removeItem('safelane_token');
+                }
+            }
+
+            checkOAuthConfig();
+        };
+
+        async function checkOAuthConfig() {
+            try {
+                const res = await fetch('/api/auth/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!data.oauth_enabled) {
+                        // OAuth client ID not set, reveal PAT box automatically with notice
+                        showStatus('status1', 'GitHub OAuth is not configured on server (GITHUB_CLIENT_ID missing). Use Personal Access Token below.', 'info');
+                        document.getElementById('manualAuthBox').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.log("Could not check OAuth config", e);
+            }
+        }
+
+        function authorizeWithGitHub() {
+            window.location.href = '/api/auth/github/login';
+        }
+
+        function toggleManualAuth() {
+            const box = document.getElementById('manualAuthBox');
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function authenticatePAT() {
+            const pat = document.getElementById('pat').value.trim();
+            if (!pat) {
+                showStatus('status1', 'Please enter a GitHub Personal Access Token', 'error');
+                return;
+            }
+
             try {
                 const res = await fetch('/api/auth/token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pat })
                 });
-                
-                if (!res.ok) throw new Error("Invalid PAT");
-                
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({ detail: 'Authentication failed' }));
+                    throw new Error(data.detail || 'Invalid PAT');
+                }
+
                 const data = await res.json();
                 token = data.access_token;
-                
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step2').classList.add('active');
-                
-                loadRepos();
+                localStorage.setItem('safelane_token', token);
+
+                showStep(2);
+                await loadReposAndUser();
             } catch (e) {
-                document.getElementById('status1').innerText = e.message;
+                showStatus('status1', e.message, 'error');
             }
         }
-        
-        async function loadRepos() {
+
+        async function loadReposAndUser() {
             try {
+                // Fetch User
+                const userRes = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (userRes.ok) {
+                    const u = await userRes.json();
+                    document.getElementById('userBadge').innerText = `👤 ${u.github_username}`;
+                }
+
+                // Fetch Repos
                 const res = await fetch('/api/github/repos', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+                if (!res.ok) throw new Error("Failed to load repositories");
+
                 const repos = await res.json();
-                
                 const select = document.getElementById('repoSelect');
+                select.innerHTML = '<option value="">-- Select a repository --</option>';
+
                 repos.forEach(r => {
                     const opt = document.createElement('option');
                     opt.value = JSON.stringify({ owner: r.owner, repo: r.name });
-                    opt.innerText = r.full_name;
+                    opt.innerText = `${r.full_name}`;
                     select.appendChild(opt);
                 });
             } catch (e) {
-                document.getElementById('status2').innerText = "Failed to load repos";
+                showStatus('status2', e.message, 'error');
             }
         }
-        
+
         async function installWorkflow() {
-            const selected = JSON.parse(document.getElementById('repoSelect').value);
-            
+            const selectVal = document.getElementById('repoSelect').value;
+            if (!selectVal) {
+                showStatus('status2', 'Please select a repository first', 'error');
+                return;
+            }
+
+            const selected = JSON.parse(selectVal);
+            const azureEndpoint = document.getElementById('azureSearchEndpoint').value.trim();
+            const azureKey = document.getElementById('azureSearchKey').value.trim();
+
+            const registrationPayload = {
+                owner: selected.owner,
+                repo: selected.repo,
+                azure_search_endpoint: azureEndpoint || null,
+                azure_search_key: azureKey || null
+            };
+
             try {
+                showStatus('status2', 'Installing workflow and registering repository...', 'info');
+
                 const res = await fetch('/api/github/install', {
                     method: 'POST',
                     headers: { 
@@ -104,24 +601,42 @@
                     },
                     body: JSON.stringify(selected)
                 });
-                
-                if (!res.ok) throw new Error("Failed to install workflow");
-                
-                // Also create registration
-                await fetch('/api/registrations/', {
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({ detail: 'Failed to install workflow' }));
+                    throw new Error(errData.detail || 'Failed to install workflow');
+                }
+
+                // Register in SafeLane platform
+                const regRes = await fetch('/api/registrations/', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(selected)
+                    body: JSON.stringify(registrationPayload)
                 });
-                
-                document.getElementById('step2').classList.remove('active');
-                document.getElementById('step3').classList.add('active');
+
+                if (!regRes.ok) {
+                    const regErr = await regRes.json().catch(() => ({ detail: 'Failed to complete registration' }));
+                    throw new Error(regErr.detail || 'Failed to complete registration');
+                }
+
+                showStep(3);
             } catch (e) {
-                document.getElementById('status2').innerText = e.message;
+                showStatus('status2', e.message, 'error');
             }
+        }
+
+        function showStep(stepNum) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${stepNum}`).classList.add('active');
+        }
+
+        function showStatus(elementId, msg, type) {
+            const el = document.getElementById(elementId);
+            el.innerText = msg;
+            el.className = `status-alert ${type}`;
         }
     </script>
 </body>

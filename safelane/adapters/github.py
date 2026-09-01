@@ -4,6 +4,12 @@ import hashlib
 import logging
 from typing import Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Header
 from safelane.contracts import PRPayload, RepoContext, VerdictReport
 from safelane.fabric.controller import orchestrate
@@ -13,17 +19,35 @@ logger = logging.getLogger('safelane.server')
 
 app = FastAPI(title="SafeLane Change Assurance Fabric")
 
-def get_repo_context(repo: str) -> Optional[RepoContext]:
-    # Mock lookup for MVP
+async def get_repo_context(repo: str) -> Optional[RepoContext]:
     token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        return None
-    return RepoContext(
-        registration_id="mock-reg-id",
-        owner=repo.split('/')[0] if '/' in repo else "unknown",
-        repo=repo.split('/')[1] if '/' in repo else repo,
-        gh_token=token
-    )
+    if token:
+        return RepoContext(
+            registration_id="mock-reg-id",
+            owner=repo.split('/')[0] if '/' in repo else "unknown",
+            repo=repo.split('/')[1] if '/' in repo else repo,
+            gh_token=token
+        )
+        
+    try:
+        from server.services.db import get_registration
+        from server.services.auth_service import decrypt_pat
+        parts = repo.split('/')
+        if len(parts) == 2:
+            owner, repo_name = parts[0], parts[1]
+            reg = await get_registration(owner, repo_name)
+            if reg and reg.is_active:
+                gh_token = decrypt_pat(reg.encrypted_pat)
+                return RepoContext(
+                    registration_id=str(reg.id),
+                    owner=owner,
+                    repo=repo_name,
+                    gh_token=gh_token
+                )
+    except Exception as e:
+        logger.warning(f"Could not fetch registration from DB for {repo}: {e}")
+
+    return None
 
 @app.get("/health")
 async def health():
@@ -73,7 +97,7 @@ async def webhook_pr(
     if not repo_name:
         raise HTTPException(status_code=400, detail="Missing repository full_name")
 
-    repo_context = get_repo_context(repo_name)
+    repo_context = await get_repo_context(repo_name)
     if not repo_context:
         raise HTTPException(status_code=404, detail="Repo context not found")
 
@@ -116,6 +140,6 @@ async def webhook_pr(
 @app.post("/analyze")
 async def analyze(payload: PRPayload):
     # Synchronous endpoint
-    repo_context = get_repo_context(payload.repo)
+    repo_context = await get_repo_context(payload.repo)
     report = await orchestrate(payload, repo_context)
     return report

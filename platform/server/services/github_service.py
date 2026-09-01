@@ -1,3 +1,4 @@
+import os
 import httpx
 import base64
 import logging
@@ -24,6 +25,32 @@ jobs:
         run: |
           printf '%s' "$EVENT_PAYLOAD" | curl -X POST "{orchestrator_url}/webhook/pr" -H "Content-Type: application/json" -H "X-GitHub-Event: pull_request" --data-binary @- --fail-with-body
 """
+
+async def exchange_code_for_token(code: str) -> str:
+    client_id = os.environ.get("GITHUB_CLIENT_ID")
+    client_secret = os.environ.get("GITHUB_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        raise ValueError("GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables are required for GitHub OAuth authorization.")
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "code": code,
+            }
+        )
+        if response.status_code != 200:
+            raise ValueError(f"Failed to communicate with GitHub OAuth endpoint: {response.text}")
+            
+        data = response.json()
+        if "access_token" not in data:
+            error_desc = data.get("error_description", data.get("error", "Failed to exchange authorization code for access token"))
+            raise ValueError(f"GitHub OAuth error: {error_desc}")
+            
+        return data["access_token"]
 
 async def validate_token(token: str) -> dict:
     async with httpx.AsyncClient() as client:
