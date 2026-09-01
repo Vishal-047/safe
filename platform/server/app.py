@@ -42,4 +42,9 @@ async def health_check():
     return {"status": "ok"}
 
 # Mount frontend
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+frontend_dir = os.path.join(BASE_DIR, "frontend")
+if not os.path.exists(frontend_dir):
+    frontend_dir = os.path.abspath("platform/frontend") if os.path.exists("platform/frontend") else os.path.abspath("frontend")
+
+app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
