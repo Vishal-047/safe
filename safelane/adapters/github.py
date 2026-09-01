@@ -44,6 +44,8 @@ async def get_repo_context(repo: str) -> Optional[RepoContext]:
                     repo=repo_name,
                     gh_token=gh_token
                 )
+            else:
+                logger.warning(f"No active registration found in DB for {repo}")
     except Exception as e:
         import traceback
         logger.warning(f"DB lookup failed for {repo}: {type(e).__name__} - {str(e)}")
