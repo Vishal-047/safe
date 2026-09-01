@@ -9,6 +9,12 @@ logger = logging.getLogger('safelane.platform')
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///./safelane.db")
 
+# Normalize database URL scheme for SQLAlchemy async engine
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+asyncpg://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 engine_kwargs = {}
 if DATABASE_URL.startswith("postgresql+asyncpg"):
     if os.environ.get("DB_SSL_INSECURE") == "true":

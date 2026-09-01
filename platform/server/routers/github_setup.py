@@ -36,15 +36,17 @@ async def list_repos(current_user: Annotated[dict, Depends(get_current_user)]):
 
 @router.post("/install")
 async def install_workflow(req: InstallRequest, current_user: Annotated[dict, Depends(get_current_user)]):
-    if not SAFELANE_ORCHESTRATOR_URL:
-        raise HTTPException(status_code=500, detail="SAFELANE_ORCHESTRATOR_URL environment variable is required")
+    orchestrator_url = os.environ.get("SAFELANE_ORCHESTRATOR_URL", "https://safelane-orchestrator.onrender.com")
         
     pat = current_user.get("pat")
     if not pat:
         raise HTTPException(status_code=401, detail="No PAT in session")
         
     try:
-        await commit_workflow_file(req.owner, req.repo, pat, SAFELANE_ORCHESTRATOR_URL)
+        await commit_workflow_file(req.owner, req.repo, pat, orchestrator_url)
         return {"status": "success", "message": f"Workflow installed in {req.owner}/{req.repo}"}
     except Exception as e:
+        logger.error(f"Failed to install workflow for {req.owner}/{req.repo}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+        
+
