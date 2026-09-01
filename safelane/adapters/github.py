@@ -80,7 +80,11 @@ async def webhook_pr(
     else:
         logger.warning("GITHUB_WEBHOOK_SECRET is not set, bypassing verification. Set it for production use.")
 
-    data = await request.json()
+    import json
+    try:
+        data = json.loads(body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
     
     event = request.headers.get("x-github-event")
     if event != "pull_request":
