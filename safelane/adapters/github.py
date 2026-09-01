@@ -20,22 +20,14 @@ logger = logging.getLogger('safelane.server')
 app = FastAPI(title="SafeLane Change Assurance Fabric")
 
 async def get_repo_context(repo: str) -> Optional[RepoContext]:
-    token = os.environ.get("GITHUB_TOKEN")
-    if token:
-        return RepoContext(
-            registration_id="mock-reg-id",
-            owner=repo.split('/')[0] if '/' in repo else "unknown",
-            repo=repo.split('/')[1] if '/' in repo else repo,
-            gh_token=token
-        )
-        
+    # 1. Primary path: look up repo registration from shared DB (OAuth token)
     try:
         import sys
         # Add platform directory to path so orchestrator can access shared DB service
         platform_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "platform")
         if platform_path not in sys.path:
             sys.path.insert(0, platform_path)
-        
+
         from server.services.db import get_registration
         from server.services.auth_service import decrypt_pat
         parts = repo.split('/')
@@ -44,6 +36,7 @@ async def get_repo_context(repo: str) -> Optional[RepoContext]:
             reg = await get_registration(owner, repo_name)
             if reg and reg.is_active:
                 gh_token = decrypt_pat(reg.encrypted_pat)
+                logger.info(f"Using OAuth token from DB for {repo}")
                 return RepoContext(
                     registration_id=str(reg.id),
                     owner=owner,
@@ -51,7 +44,18 @@ async def get_repo_context(repo: str) -> Optional[RepoContext]:
                     gh_token=gh_token
                 )
     except Exception as e:
-        logger.warning(f"Could not fetch registration from DB for {repo}: {e}")
+        logger.warning(f"DB lookup failed for {repo}: {e}")
+
+    # 2. Fallback: use GITHUB_TOKEN env var if DB lookup failed or repo not registered
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        logger.warning(f"Falling back to GITHUB_TOKEN for {repo}")
+        return RepoContext(
+            registration_id="fallback-token",
+            owner=repo.split('/')[0] if '/' in repo else "unknown",
+            repo=repo.split('/')[1] if '/' in repo else repo,
+            gh_token=token
+        )
 
     return None
 
