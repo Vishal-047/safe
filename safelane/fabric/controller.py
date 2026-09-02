@@ -36,7 +36,7 @@ def build_verdict(request: AnalysisRequest, evidence_results: List[EvidenceResul
     total_evidence_risk = sum(er.risk_score_modifier for er in evidence_results if er.status != "pass")
     confidence_score = max(0, min(100, final_score - (total_evidence_risk // 2)))
     
-    is_blocked = has_security_blocker or any(er.status == "critical" for er in evidence_results) or confidence_score < 60
+    is_blocked = has_security_blocker or any(er.status == "critical" for er in evidence_results) or confidence_score < 70
     decision = "blocked" if is_blocked else "greenlight"
     
     # 4. Generate dynamic Markdown risk brief
