@@ -14,7 +14,8 @@ SECRET_PATTERNS = [
     (r"ghp_[a-zA-Z0-9]{36}", "GitHub token exposed"),
     (r"sk-[a-zA-Z0-9]{20,}", "Secret key exposed (e.g. OpenAI)"),
     (r"AKIA[0-9A-Z]{16}", "AWS Access Key ID exposed"),
-    (r"xox[bpras]-[a-zA-Z0-9]+", "Slack token exposed")
+    (r"xox[bpras]-[a-zA-Z0-9]+", "Slack token exposed"),
+    (r"(?i)(password|passwd|pwd|secret|token|api_key|credential)\s*=\s*['\"][^'\"]{6,}['\"]", "Hardcoded credential/secret exposed")
 ]
 
 # 2. CI/CD hardening (warning/critical)
