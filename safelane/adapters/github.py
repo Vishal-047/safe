@@ -132,6 +132,9 @@ async def webhook_pr(
             )
             if diff_resp.status_code == 200:
                 diff_text = diff_resp.text
+            elif diff_resp.status_code == 401:
+                logger.error(f"GitHub API returned 401 Unauthorized for {repo_name}. The stored OAuth token is invalid or expired.")
+                raise HTTPException(status_code=401, detail="GitHub token invalid or expired. Please re-authenticate.")
                 
             files_resp = await client.get(
                 f"https://api.github.com/repos/{repo_name}/pulls/{pr_data.get('number', 0)}/files",
@@ -139,6 +142,9 @@ async def webhook_pr(
             )
             if files_resp.status_code == 200:
                 changed_files = [f["filename"] for f in files_resp.json()]
+            elif files_resp.status_code == 401:
+                logger.error(f"GitHub API returned 401 Unauthorized for {repo_name} files fetch.")
+                raise HTTPException(status_code=401, detail="GitHub token invalid or expired.")
     except Exception as e:
         logger.error(f"Failed to fetch PR details from GitHub: {e}")
 
