@@ -145,6 +145,8 @@ async def webhook_pr(
             elif files_resp.status_code == 401:
                 logger.error(f"GitHub API returned 401 Unauthorized for {repo_name} files fetch.")
                 raise HTTPException(status_code=401, detail="GitHub token invalid or expired.")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to fetch PR details from GitHub: {e}")
 
