@@ -66,7 +66,11 @@ async def init_db():
 async def get_registration(owner: str, repo: str) -> Registration | None:
     async with async_session() as session:
         from sqlalchemy import select
-        result = await session.execute(select(Registration).where(Registration.owner == owner, Registration.repo == repo))
+        result = await session.execute(
+            select(Registration)
+            .where(Registration.owner == owner, Registration.repo == repo, Registration.is_active == True)
+            .order_by(Registration.created_at.desc())
+        )
         return result.scalars().first()
 
 async def create_registration(**kwargs) -> Registration:
